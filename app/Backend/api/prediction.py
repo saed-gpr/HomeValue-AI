@@ -1,7 +1,9 @@
 from fastapi import APIRouter, HTTPException, status
 from contextlib import asynccontextmanager
 import joblib
-from app.Backend.schemas.prediction import UserEntrySchema
+import pandas as pd
+import numpy as np
+from schemas.prediction import UserEntrySchema
 
 
 ml_models = {}
@@ -9,7 +11,7 @@ ml_models = {}
 @asynccontextmanager
 async def router_lifespan(router: APIRouter):
     try:
-        model_path = "ML/analysis/optimized_house_price_pipeline.pkl"
+        model_path = "ML/artifacts/model_training_pipeline.pkl"
         ml_models['house_predictor'] = joblib.load(model_path)
         print('success!')
     except Exception as e:
@@ -38,4 +40,31 @@ def predict(data: UserEntrySchema):
             detail= "The model is unavailable"
             )
 
-    return {"status": "success", "message": "Model is ready to predict!"}
+    try:
+
+        input_dict = data.model_dump()
+
+        df = pd.DataFrame([input_dict])
+
+        training_features = [
+            'OverallQual', 'GrLivArea', 'GarageCars', 'TotalBsmtSF', 
+            'YearBuilt', 'FullBath', 'TotRmsAbvGrd', 'GarageArea'
+        ]
+
+        df = df[training_features]
+
+        log_prediction = model.predict(df)
+
+        actual_price = np.expm1(log_prediction).item()
+
+        return{
+            "status" : "success",
+            "predicted_price" : round(actual_price, 2)
+        }
+
+    except Exception as e:
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail= f'Prediction error : {str(e)}'
+        )
