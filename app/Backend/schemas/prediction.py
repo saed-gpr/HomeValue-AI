@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional
+
 
 class UserEntrySchema(BaseModel):
 
@@ -35,19 +35,19 @@ class UserEntrySchema(BaseModel):
         description="Total number of rooms above ground (excluding bathrooms)"
     )
 
-    YearBuilt: Optional[int] = Field(
-        default=2014,
+    YearBuilt: int = Field(
+        ...,
         description="Original construction year of the house"
     )
 
-    GarageCars: Optional[int] = Field(
-        default=None, 
+    GarageCars: int = Field(
+        default=0, 
         ge=0, 
         description="Size of the garage in terms of car capacity"
     )
     
-    GarageArea: Optional[float] = Field(
-        default=None, 
+    GarageArea: int = Field(
+        default=0, 
         ge=0, 
         description="Total area of the garage in square feet"
     )

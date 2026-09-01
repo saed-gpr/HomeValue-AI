@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from api.prediction import router as prediction_router
 from fastapi.middleware.cors import CORSMiddleware
 
+
 app = FastAPI(
     title='HomeValue-AI API',
     description='API for House Price Prediction',

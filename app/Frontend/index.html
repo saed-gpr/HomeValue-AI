@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI House Price Predictor</title>
+    <style>
+        /* تنظیمات پایه و پس‌زمینه دارک مدرن */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* افکت شیشه‌ای (Glassmorphism) */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 700px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        /* گرید برای چیدمان دو ستونه فیلدها */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #cbd5e1;
+        }
+
+        .req {
+            color: #ef4444; /* رنگ قرمز برای ستاره الزامی */
+            margin-right: 4px;
+            font-weight: bold;
+        }
+
+        /* طراحی فیلدهای ورودی */
+        input {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        /* دکمه پیش‌بینی */
+        button {
+            width: 100%;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
+            border: none;
+            padding: 15px;
+            margin-top: 30px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -10px #4f46e5;
+        }
+
+        /* باکس نمایش نتیجه */
+        #result-box {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.2rem;
+            display: none;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .loading {
+            text-align: center;
+            display: none;
+            margin-top: 20px;
+            color: #cbd5e1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glass-panel">
+        <h2>تخمین قیمت خانه با هوش مصنوعی</h2>
+        
+        <form id="prediction-form">
+            <div class="form-grid">
+                <!-- فیلدهای الزامی -->
+                <div class="input-group">
+                    <label>کیفیت کلی (۱ تا ۱۰) <span class="req">*</span></label>
+                    <input type="number" id="OverallQual" required min="1" max="10" placeholder="مثلاً: 7">
+                </div>
+                
+                <div class="input-group">
+                    <label>متراژ روی زمین <span class="req">*</span></label>
+                    <input type="number" id="GrLivArea" required min="1" placeholder="مثلاً: 1710">
+                </div>
+
+                <div class="input-group">
+                    <label>مساحت زیرزمین <span class="req">*</span></label>
+                    <input type="number" id="TotalBsmtSF" required min="0" placeholder="مثلاً: 856">
+                </div>
+
+                <div class="input-group">
+                    <label>تعداد حمام کامل <span class="req">*</span></label>
+                    <input type="number" id="FullBath" required min="0" placeholder="مثلاً: 2">
+                </div>
+
+                <div class="input-group">
+                    <label>تعداد کل اتاق‌ها <span class="req">*</span></label>
+                    <input type="number" id="TotRmsAbvGrd" required min="1" placeholder="مثلاً: 6">
+                </div>
+
+                
+                <div class="input-group">
+                    <label>سال ساخت <span class="req">*</span></label>
+                    <input type="number" id="YearBuilt" required min="1800" max="2026" placeholder="مثلاً: 2000">
+                </div>
+
+                <div class="input-group">
+                    <label>ظرفیت گاراژ (ماشین) <span class="req">*</span></label>
+                    <input type="number" id="GarageCars" required value="0" min="0">
+                </div>
+
+                <div class="input-group">
+                    <label>مساحت گاراژ <span class="req">*</span></label>
+                    <input type="number" id="GarageArea" required value="0" min="0">
+                </div>
+
+            <button type="submit">تخمین قیمت</button>
+        </form>
+
+        <div class="loading" id="loading">در حال پردازش توسط مدل ML...</div>
+        <div id="result-box"></div>
+    </div>
+
+    <script>
+        document.getElementById('prediction-form').addEventListener('submit', async (e) => {
+            e.preventDefault(); // جلوگیری از رفرش صفحه
+            
+            const resultBox = document.getElementById('result-box');
+            const loading = document.getElementById('loading');
+            
+            resultBox.style.display = 'none';
+            loading.style.display = 'block';
+
+            // جمع‌آوری اطلاعات از فرم
+
+            const payload = {
+                OverallQual: parseInt(document.getElementById('OverallQual').value),
+                GrLivArea: parseInt(document.getElementById('GrLivArea').value),
+                TotalBsmtSF: parseFloat(document.getElementById('TotalBsmtSF').value),
+                FullBath: parseInt(document.getElementById('FullBath').value),
+                TotRmsAbvGrd: parseInt(document.getElementById('TotRmsAbvGrd').value),
+                YearBuilt: parseInt(document.getElementById('YearBuilt').value),
+                GarageCars: parseInt(document.getElementById('GarageCars').value),
+                GarageArea: parseFloat(document.getElementById('GarageArea').value)
+            };
+
+            // اضافه کردن فیلدهای اختیاری در صورت وارد شدن
+            if(document.getElementById('YearBuilt').value) payload.YearBuilt = parseInt(document.getElementById('YearBuilt').value);
+            if(document.getElementById('GarageCars').value) payload.GarageCars = parseInt(document.getElementById('GarageCars').value);
+            if(document.getElementById('GarageArea').value) payload.GarageArea = parseFloat(document.getElementById('GarageArea').value);
+
+            try {
+                // ارسال درخواست به سرور FastAPI شما
+                const response = await fetch('http://127.0.0.1:8000/prediction/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultBox.style.background = 'rgba(16, 185, 129, 0.1)';
+                    resultBox.style.borderColor = 'rgba(16, 185, 129, 0.2)';
+                    resultBox.style.color = '#10b981';
+                    // فرمت کردن عدد با کاما (مثلاً 159,620.39)
+                    const formattedPrice = new Intl.NumberFormat('en-US').format(data.predicted_price);
+                    resultBox.innerHTML = `💵 قیمت تخمینی: <strong>$${formattedPrice}</strong>`;
+                } else {
+                    throw new Error(data.detail || "خطایی در سرور رخ داد");
+                }
+            } catch (error) {
+                resultBox.style.background = 'rgba(239, 68, 68, 0.1)';
+                resultBox.style.borderColor = 'rgba(239, 68, 68, 0.2)';
+                resultBox.style.color = '#ef4444';
+                resultBox.innerHTML = `⚠️ خطا: ${error.message}`;
+            } finally {
+                loading.style.display = 'none';
+                resultBox.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
