@@ -1,3 +1,13 @@
+# 🚀 Machine Learning Model Deployment with FastAPI & Docker
+
+This repository demonstrates a complete workflow for deploying a Machine Learning model. The model is built and trained using **scikit-learn**, exposed as a fast and robust REST API using **FastAPI**, and fully containerized using **Docker** for easy and consistent deployment across any environment.
+
+## 🛠️ Tech Stack
+- **Machine Learning:** scikit-learn, pandas, numpy
+- **Backend/API:** FastAPI, Uvicorn
+- **Containerization:** Docker
+
+
 ```text
 HomeValue-AI
 ├── ML
